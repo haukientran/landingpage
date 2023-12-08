@@ -1,0 +1,44 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: ${NAME_CONTAINER}_nginx
+    restart: always
+    ports:
+      - "${PORTS_NGINX}:80"
+    expose:
+      - "80"
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./:/var/home/
+      - .docker/nginx/app.conf:/etc/nginx/conf.d/app.conf
+      - .docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+    command: nginx
+  php-fpm:
+    image: php_image
+    container_name: ${NAME_CONTAINER}_php
+    restart: always
+    expose:
+      - "9000"
+    volumes:
+      - ./:/var/home:cached
+      - .docker/php-fpm/php-fpm.conf:/etc/php-fpm.conf
+      - .docker/php-fpm/www.conf:/etc/php-fpm.d/www.conf
+      - ./${FOLDER_LOG}:/var/home/storage
+
+    stdin_open: true
+    tty: true
+    command: php-fpm
+    depends_on:
+      - mysql
+  mysql:
+    image: mysql:latest
+    container_name: ${NAME_CONTAINER}_mysql
+    restart: always
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+    ports:
+    - "${PORTS_MYSQL}:3306"
+    volumes:
+      - ./.docker/mysql/database:/var/lib/mysql
